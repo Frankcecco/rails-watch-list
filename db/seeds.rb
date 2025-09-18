@@ -7,3 +7,26 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+require 'uri'
+require 'net/http'
+require 'json'
+url = URI("https://api.themoviedb.org/3/movie/top_rated?language=en-US&page=1")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Get.new(url)
+request["accept"] = 'application/json'
+request["Authorization"] = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3ZDAyNGVhYjVkNzAzZDcyOGIxMmVkZDg4ZTE1NjhkNyIsIm5iZiI6MTc1ODIyMzc5Ni41OTUsInN1YiI6IjY4Y2M1ZGI0MDI1YWYxZDVhODM4MmFjZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.FR-P84JSMKvA-JjCJm2Sc6bMxP7ZNHkOTgECbbDo_ig'
+
+response = JSON.parse(http.request(request).read_body)
+results = response["results"]
+
+results.each do |movie|
+  Movie.create!(
+    title: movie["title"],
+    overview: movie["overview"],
+    poster_url: "https://image.tmdb.org/t/p/original#{movie["poster_path"]}",
+    rating: movie["vote_average"]
+  )
+end
